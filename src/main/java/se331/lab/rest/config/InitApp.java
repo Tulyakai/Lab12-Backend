@@ -20,6 +20,7 @@ public class InitApp implements ApplicationListener<ApplicationReadyEvent> {
     OrganizerRepository organizerRepository;
     @Autowired
     ParticipantRepository participantRepository;
+
     @Override
     @Transactional
     public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
