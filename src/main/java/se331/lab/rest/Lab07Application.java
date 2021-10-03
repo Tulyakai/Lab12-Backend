@@ -20,6 +20,7 @@ public class Lab07Application {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
                         .allowedOrigins("http://localhost:3000")
+                        .allowedOrigins("http://157.230.39.136:8001")
                         .exposedHeaders("x-total-count");
             }
         };
