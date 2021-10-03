@@ -3,6 +3,7 @@ package se331.lab.rest.security.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mobile.device.Device;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,14 +13,23 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import se331.lab.rest.entity.Organizer;
 import se331.lab.rest.security.JwtTokenUtil;
+import se331.lab.rest.security.entity.Authority;
+import se331.lab.rest.security.entity.AuthorityName;
 import se331.lab.rest.security.entity.JwtUser;
 import se331.lab.rest.security.entity.User;
 import se331.lab.rest.security.repository.UserRepository;
 import se331.lab.rest.util.LabMapper;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,7 +55,6 @@ public class AuthenticationRestController {
 
     @PostMapping("${jwt.route.authentication.path}")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody JwtAuthenticationRequest authenticationRequest, Device device) throws AuthenticationException {
-
         // Perform the security
         final Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -83,5 +92,24 @@ public class AuthenticationRestController {
         }
     }
 
-
+    @PostMapping("${jwt.route.register.path}")
+    public ResponseEntity<?> registerAuthentication(@RequestBody JwtAuthenticationRequest authenticationRequest, Device device) throws AuthenticationException {
+        PasswordEncoder encoder = new BCryptPasswordEncoder();
+        if (userRepository.findByUsername(authenticationRequest.getUsername()) == null ){
+            userRepository.save(User.builder()
+                    .firstname(authenticationRequest.getUsername())
+                    .lastname(authenticationRequest.getUsername())
+                    .username(authenticationRequest.getUsername())
+                    .password(encoder.encode(authenticationRequest.getPassword()))
+                    .enabled(true)
+                    .lastPasswordResetDate(new Date(System.currentTimeMillis()))
+                    .email(authenticationRequest.getEmail())
+                    .organizer(Organizer.builder()
+                            .id(3l).build())
+                    .build());
+            return ResponseEntity.ok("User has registered successfully");
+        }else {
+            return (ResponseEntity<?>) ResponseEntity.status(HttpStatus.BAD_GATEWAY);
+        }
+    }
 }
